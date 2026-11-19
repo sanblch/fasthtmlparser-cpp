@@ -1,0 +1,75 @@
+count(//li)
+count(//div[span > 20])
+sum(//span[@class='price'])
+sum(//span) div count(//span)
+string(//h2)
+//title
+concat(//h2[1], '-', (//h2)[3])
+name(//*[@rel])
+boolean(//table)
+not(//table)
+//a = '/beta'
+//a/@href = '/beta'
+count(//span) > 3
+7 mod 3
+-7 div 2
+1 div 0
+0 div 0
+floor(2.5) + ceiling(2.5) + round(2.5) + round(-2.5)
+substring('12345', 1.5, 2.6)
+substring('12345', 0, 3)
+substring('12345', 2)
+substring-before('2026-11-14', '-')
+substring-after('2026-11-14', '-')
+translate('bar', 'abc', 'ABC')
+translate('--aaa--', 'abc-', 'ABC')
+normalize-space('  a   b  ')
+string-length('hello')
+number('  12.5 ')
+number('abc')
+string(0.1 + 0.2)
+string(1000000)
+string(-0.5)
+string(1 div 3)
+starts-with('abc', 'ab') and contains('abc', 'bc')
+//li[@id='li4']/ancestor::li/@id
+count(//li[@id='li3']/preceding::*)
+count(//body/following::*)
+count(//@id)
+count(//div/@*)
+//div//span
+//div//a
+//div//div//a
+//div//span[@class='x']
+//div/descendant::span
+//div/descendant-or-self::div
+//div/descendant-or-self::*[@class='x']
+//div//span[1]
+//div//span[last()]
+//div/descendant::span[2]
+//div[.//a]//span
+//a/ancestor::div
+//a/ancestor::*[@id]
+//a/ancestor-or-self::*
+//span/ancestor-or-self::div[@class='x']
+//a/ancestor::div[1]
+//a/ancestor::div[last()]
+//span/ancestor::*[2]
+(//a | //span)/ancestor::div
+//*[@class='x']/ancestor::div
+//div/ancestor-or-self::div
+//div[
+//div[@class=
+//a/@
+1 +
+//div)
+$x
+foo()
+count()
+count('a')
+namespace::x
+bogus::x
+'unterminated
+//a ! b
+1 | //a
+

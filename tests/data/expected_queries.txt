@@ -1,0 +1,237 @@
+CSS	div	d1,d2,d3
+CSS	DIV	d1,d2,d3
+CSS	*	html,head,title,css,body,d1,h1,p1,a1,d2,h2,p2,a2,d3,h3,p3,p4,e1,e2,e3,ul,li1,li2,li3,ul2,li4,li5,li6,f,i1,i2,i3,s,o1,o2,t,btn,para,b,i,a3,sec,art1,t1,art2,t2,ap
+CSS	#d2	d2
+CSS	#nope	
+CSS	.card	d1,d2,d3
+CSS	.Card	d3
+CSS	.card.featured	d1
+CSS	div.card > span.price	p1,p2,p3,p4
+CSS	span.price.old	p3
+CSS	h2, a	h1,a1,h2,a2,h3,a3
+CSS	a, h2, a	h1,a1,h2,a2,h3,a3
+CSS	body > *	d1,d2,d3,ul,f,para,a3,sec
+CSS	#ul > li	li1,li2,li3,li6
+CSS	ul li	li1,li2,li3,li4,li5,li6
+CSS	ul > li > ul > li	li4,li5
+CSS	section h3	t1,t2
+CSS	[data-kind]	d1,d2,d3
+CSS	[data-kind='']	d3
+CSS	[data-kind=Book]	d1
+CSS	[data-kind=book i]	d1
+CSS	[data-kind|=book]	d2
+CSS	[data-kind^=Bo]	d1
+CSS	[data-kind$=new]	d2
+CSS	[data-kind*=ook]	d1,d2
+CSS	[data-kind^='']	
+CSS	[rel~=noopener]	a1
+CSS	[rel~=noo]	
+CSS	a[href]	a1,a2
+CSS	a[href^='https://']	a1
+CSS	a[href*='a=1&b=2']	a1
+CSS	a[href$='b=2']	a1
+CSS	[type=text]	i2,i3
+CSS	[type=text i]	i2,i3
+CSS	[TYPE=checkbox]	i1
+CSS	[lang|=en]	html
+CSS	[class~=Card]	d3
+CSS	[rel~=NOFOLLOW]	a1
+CSS	[data-kind=BOOK]	
+CSS	h2 + span	p1,p2,p3
+CSS	h2 ~ span	p1,p2,p3,p4
+CSS	span + span	p4
+CSS	h2 ~ a	a1,a2
+CSS	li + li	li2,li3,li5,li6
+CSS	li ~ li	li2,li3,li5,li6
+CSS	#li1 ~ *	li2,li3,li6
+CSS	div > h2 + span.price	p1,p2,p3
+CSS	article + article h3	t2
+CSS	ul ul li	li4,li5
+CSS	body > ul > li	li1,li2,li3,li6
+CSS	#d1 ~ div > h2	h2,h3
+CSS	form > input + input ~ select > option	o1,o2
+CSS	li:first-child	li1,li4
+CSS	li:last-child	li5,li6
+CSS	li:only-child	
+CSS	span:first-of-type	p1,p2,p3
+CSS	span:last-of-type	p1,p2,p4
+CSS	p:only-of-type	para,ap
+CSS	li:nth-child(2)	li2,li5
+CSS	li:nth-child(odd)	li1,li3,li4
+CSS	li:nth-child(even)	li2,li5,li6
+CSS	li:nth-child(2n+1)	li1,li3,li4
+CSS	li:nth-child(-n+2)	li1,li2,li4,li5
+CSS	li:nth-child(n+3)	li3,li6
+CSS	li:nth-last-child(1)	li5,li6
+CSS	li:nth-last-child(-n + 2)	li3,li4,li5,li6
+CSS	span:nth-of-type(2)	p4
+CSS	div > *:nth-last-of-type(1)	h1,p1,a1,h2,p2,a2,h3,p4,e3
+CSS	*:nth-child(3n)	a1,a2,d3,p4,e3,li3,i3,btn,para
+CSS	li:nth-child(0n+3)	li3
+CSS	li:nth-child(+2n - 1)	li1,li3,li4
+CSS	:root	html
+CSS	html:root	html
+CSS	p:empty	e1,e2
+CSS	li:empty	
+CSS	div:not(.featured)	d2,d3
+CSS	li:not(:first-child):not(:last-child)	li2,li3
+CSS	:not(div, span, li)	html,head,title,css,body,h1,a1,h2,a2,h3,e1,e2,e3,ul,ul2,f,i1,i2,i3,s,o1,o2,t,btn,para,b,i,a3,sec,art1,t1,art2,t2,ap
+CSS	div :is(h2, a)	h1,a1,h2,a2,h3
+CSS	:where(#d1, #d2) > a	a1,a2
+CSS	div:has(> a)	d1,d2
+CSS	div:has(a[rel])	d1
+CSS	li:has(li)	li3
+CSS	h2:has(+ span)	h1,h2,h3
+CSS	h2:has(~ a)	h1,h2
+CSS	article:has(h3 + p)	art2
+CSS	div:not(:has(a))	d3
+CSS	ul:has(> li:nth-child(3))	ul
+CSS	li:nth-child(odd of .odd, #li3)	li2
+CSS	li:nth-child(1 of li:not(#li1))	li2,li4
+CSS	:checked	i1,o2
+CSS	input:disabled	i2
+CSS	*:enabled	i1,i3,s,o1,o2,t
+CSS	:required	i2
+CSS	input:optional	i1,i3
+CSS	a:link	a1,a2
+CSS	:any-link	a1,a2
+XP	//div	d1,d2,d3
+XP	//DIV	d1,d2,d3
+XP	/html/body/div[2]/h2	h2
+XP	//body/*[3]	d3
+XP	//*	html,head,title,body,d1,h1,p1,a1,d2,h2,p2,a2,d3,h3,p3,p4,ul,li1,li2,li3,ul2,li4,para,b
+XP	//div[@class='card']	d2,d3
+XP	//div[@class!='card']	d1
+XP	//div[contains(@class,'featured')]	d1
+XP	//span[@class='price']	p1,p2,p4
+XP	//span[@class='price'][2]	
+XP	//*[@rel]	a1
+XP	//*[not(@rel)]	html,head,title,body,d1,h1,p1,d2,h2,p2,a2,d3,h3,p3,p4,ul,li1,li2,li3,ul2,li4,para,b
+XP	//div/span[1]	p1,p2,p3
+XP	//div/span[last()]	p1,p2,p4
+XP	(//span)[2]	p2
+XP	(//span)[last()]	p4
+XP	//li[1]	li1,li4
+XP	//ul//li[1]	li1,li4
+XP	//li[position()>1]	li2,li3
+XP	//li[last()-1]	li2
+XP	//div[2]	d2
+XP	//div[position() mod 2 = 1]	d1,d3
+XP	//div[h2='Beta']/a	a2
+XP	//div[span][a]	d1,d2
+XP	//div[not(a)]	d3
+XP	//div[.//a]	d1,d2
+XP	//li[ul]	li3
+XP	//div[count(span)=2]	d3
+XP	//div[span > 20]	d2
+XP	//div[span < 8]	d3
+XP	//span[number(.) mod 2 = 1]	p2,p3,p4
+XP	//h2[.='Gamma']/following-sibling::span	p3,p4
+XP	//span[@id='p4']/preceding-sibling::*	h3,p3
+XP	//li[@id='li3']/preceding-sibling::li[1]	li2
+XP	//li[@id='li3']/preceding-sibling::li[last()]	li1
+XP	//li/following-sibling::li[1]	li2,li3
+XP	//a/..	d1,d2
+XP	//b/parent::p	para
+XP	//p/text()/..	para
+XP	//li/ancestor::ul	ul,ul2
+XP	//li[@id='li4']/ancestor-or-self::*	html,body,ul,li3,ul2,li4
+XP	//li[@id='li4']/ancestor::*[2]	li3
+XP	//h2/following::a	a1,a2
+XP	//a[@id='a2']/preceding::h2	h1,h2
+XP	//a[@id='a2']/preceding::*[1]	p2
+XP	//div[@id='d1']//*	h1,p1,a1
+XP	//div[@id='d1']/descendant-or-self::*	d1,h1,p1,a1
+XP	descendant::li	li1,li2,li3,li4
+XP	//li/self::li	li1,li2,li3,li4
+XP	//ul/li | //p	li1,li2,li3,li4,para
+XP	//p | //h2 | //p	h1,h2,h3,para
+XP	//*[self::h2 or self::a]	h1,a1,h2,a2,h3
+XP	//*[name()='span'][@class='price old']	p3
+XP	//*[local-name()='h2']	h1,h2,h3
+XP	//li[starts-with(.,'t')]	li2,li3
+XP	//li[string-length(.)=3]	li1,li2
+XP	//div[substring(@id,2)='2']	d2
+XP	//div[translate(@id,'d','D')='D3']	d3
+XP	//h2[normalize-space(.)='Alpha']	h1
+XP	//span[. = //h2[.='Alpha']/../span]	p1
+XP	//div[span = 5]	d3
+XP	//span[@class='price' and . >= 10]	p1,p2
+XP	//span[@class='price old' or . = '25']	p2,p3
+XP	//*[@id = 'b' or @id = 'title']	title,b
+XP	//div[-1 + 3]	d2
+XP	//*[contains(concat(' ', normalize-space(@class), ' '), ' price ')]	p1,p2,p3,p4
+VAL	count(//li)	4
+VAL	count(//div[span > 20])	1
+VAL	sum(//span[@class='price'])	40
+VAL	sum(//span) div count(//span)	11.75
+VAL	string(//h2)	Alpha
+VAL	//title	Shop
+VAL	concat(//h2[1], '-', (//h2)[3])	Alpha-Gamma
+VAL	name(//*[@rel])	a
+VAL	boolean(//table)	false
+VAL	not(//table)	true
+VAL	//a = '/beta'	false
+VAL	//a/@href = '/beta'	true
+VAL	count(//span) > 3	true
+VAL	7 mod 3	1
+VAL	-7 div 2	-3.5
+VAL	1 div 0	Infinity
+VAL	0 div 0	NaN
+VAL	floor(2.5) + ceiling(2.5) + round(2.5) + round(-2.5)	6
+VAL	substring('12345', 1.5, 2.6)	234
+VAL	substring('12345', 0, 3)	12
+VAL	substring('12345', 2)	2345
+VAL	substring-before('2026-11-14', '-')	2026
+VAL	substring-after('2026-11-14', '-')	11-14
+VAL	translate('bar', 'abc', 'ABC')	BAr
+VAL	translate('--aaa--', 'abc-', 'ABC')	AAA
+VAL	normalize-space('  a   b  ')	a b
+VAL	string-length('hello')	5
+VAL	number('  12.5 ')	12.5
+VAL	number('abc')	NaN
+VAL	string(0.1 + 0.2)	0.30000000000000004
+VAL	string(1000000)	1000000
+VAL	string(-0.5)	-0.5
+VAL	string(1 div 3)	0.3333333333333333
+VAL	starts-with('abc', 'ab') and contains('abc', 'bc')	true
+VAL	//li[@id='li4']/ancestor::li/@id	li3
+VAL	count(//li[@id='li3']/preceding::*)	16
+VAL	count(//body/following::*)	0
+VAL	count(//@id)	24
+VAL	count(//div/@*)	6
+VAL	//div//span	10
+VAL	//div//a	More
+VAL	//div//div//a	<null>
+VAL	//div//span[@class='x']	<null>
+VAL	//div/descendant::span	10
+VAL	//div/descendant-or-self::div	Alpha 10 More
+VAL	//div/descendant-or-self::*[@class='x']	<null>
+VAL	//div//span[1]	10
+VAL	//div//span[last()]	10
+VAL	//div/descendant::span[2]	5
+VAL	//div[.//a]//span	10
+VAL	//a/ancestor::div	Alpha 10 More
+VAL	//a/ancestor::*[@id]	Shop Alpha 10 More Beta 25 More Gamma 7 5 onetwothreefour Hello bold world
+VAL	//a/ancestor-or-self::*	Shop Alpha 10 More Beta 25 More Gamma 7 5 onetwothreefour Hello bold world
+VAL	//span/ancestor-or-self::div[@class='x']	<null>
+VAL	//a/ancestor::div[1]	Alpha 10 More
+VAL	//a/ancestor::div[last()]	Alpha 10 More
+VAL	//span/ancestor::*[2]	Alpha 10 More Beta 25 More Gamma 7 5 onetwothreefour Hello bold world
+VAL	(//a | //span)/ancestor::div	Alpha 10 More
+VAL	//*[@class='x']/ancestor::div	<null>
+VAL	//div/ancestor-or-self::div	Alpha 10 More
+VAL	//div[	ERROR
+VAL	//div[@class=	ERROR
+VAL	//a/@	ERROR
+VAL	1 +	ERROR
+VAL	//div)	ERROR
+VAL	$x	ERROR
+VAL	foo()	ERROR
+VAL	count()	ERROR
+VAL	count('a')	ERROR
+VAL	namespace::x	ERROR
+VAL	bogus::x	ERROR
+VAL	'unterminated	ERROR
+VAL	//a ! b	ERROR
+VAL	1 | //a	ERROR

@@ -1,0 +1,97 @@
+div
+DIV
+*
+#d2
+#nope
+.card
+.Card
+.card.featured
+div.card > span.price
+span.price.old
+h2, a
+a, h2, a
+body > *
+#ul > li
+ul li
+ul > li > ul > li
+section h3
+[data-kind]
+[data-kind='']
+[data-kind=Book]
+[data-kind=book i]
+[data-kind|=book]
+[data-kind^=Bo]
+[data-kind$=new]
+[data-kind*=ook]
+[data-kind^='']
+[rel~=noopener]
+[rel~=noo]
+a[href]
+a[href^='https://']
+a[href*='a=1&b=2']
+a[href$='b=2']
+[type=text]
+[type=text i]
+[TYPE=checkbox]
+[lang|=en]
+[class~=Card]
+[rel~=NOFOLLOW]
+[data-kind=BOOK]
+h2 + span
+h2 ~ span
+span + span
+h2 ~ a
+li + li
+li ~ li
+#li1 ~ *
+div > h2 + span.price
+article + article h3
+ul ul li
+body > ul > li
+#d1 ~ div > h2
+form > input + input ~ select > option
+li:first-child
+li:last-child
+li:only-child
+span:first-of-type
+span:last-of-type
+p:only-of-type
+li:nth-child(2)
+li:nth-child(odd)
+li:nth-child(even)
+li:nth-child(2n+1)
+li:nth-child(-n+2)
+li:nth-child(n+3)
+li:nth-last-child(1)
+li:nth-last-child(-n + 2)
+span:nth-of-type(2)
+div > *:nth-last-of-type(1)
+*:nth-child(3n)
+li:nth-child(0n+3)
+li:nth-child(+2n - 1)
+:root
+html:root
+p:empty
+li:empty
+div:not(.featured)
+li:not(:first-child):not(:last-child)
+:not(div, span, li)
+div :is(h2, a)
+:where(#d1, #d2) > a
+div:has(> a)
+div:has(a[rel])
+li:has(li)
+h2:has(+ span)
+h2:has(~ a)
+article:has(h3 + p)
+div:not(:has(a))
+ul:has(> li:nth-child(3))
+li:nth-child(odd of .odd, #li3)
+li:nth-child(1 of li:not(#li1))
+:checked
+input:disabled
+*:enabled
+:required
+input:optional
+a:link
+:any-link

@@ -1,0 +1,66 @@
+//div
+//DIV
+/html/body/div[2]/h2
+//body/*[3]
+//*
+//div[@class='card']
+//div[@class!='card']
+//div[contains(@class,'featured')]
+//span[@class='price']
+//span[@class='price'][2]
+//*[@rel]
+//*[not(@rel)]
+//div/span[1]
+//div/span[last()]
+(//span)[2]
+(//span)[last()]
+//li[1]
+//ul//li[1]
+//li[position()>1]
+//li[last()-1]
+//div[2]
+//div[position() mod 2 = 1]
+//div[h2='Beta']/a
+//div[span][a]
+//div[not(a)]
+//div[.//a]
+//li[ul]
+//div[count(span)=2]
+//div[span > 20]
+//div[span < 8]
+//span[number(.) mod 2 = 1]
+//h2[.='Gamma']/following-sibling::span
+//span[@id='p4']/preceding-sibling::*
+//li[@id='li3']/preceding-sibling::li[1]
+//li[@id='li3']/preceding-sibling::li[last()]
+//li/following-sibling::li[1]
+//a/..
+//b/parent::p
+//p/text()/..
+//li/ancestor::ul
+//li[@id='li4']/ancestor-or-self::*
+//li[@id='li4']/ancestor::*[2]
+//h2/following::a
+//a[@id='a2']/preceding::h2
+//a[@id='a2']/preceding::*[1]
+//div[@id='d1']//*
+//div[@id='d1']/descendant-or-self::*
+descendant::li
+//li/self::li
+//ul/li | //p
+//p | //h2 | //p
+//*[self::h2 or self::a]
+//*[name()='span'][@class='price old']
+//*[local-name()='h2']
+//li[starts-with(.,'t')]
+//li[string-length(.)=3]
+//div[substring(@id,2)='2']
+//div[translate(@id,'d','D')='D3']
+//h2[normalize-space(.)='Alpha']
+//span[. = //h2[.='Alpha']/../span]
+//div[span = 5]
+//span[@class='price' and . >= 10]
+//span[@class='price old' or . = '25']
+//*[@id = 'b' or @id = 'title']
+//div[-1 + 3]
+//*[contains(concat(' ', normalize-space(@class), ' '), ' price ')]

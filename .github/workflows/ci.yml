@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: gcc
+            cxx: g++
+            bench: build/fh_bench
+          - os: ubuntu-latest
+            name: clang
+            cxx: clang++
+            bench: build/fh_bench
+          - os: windows-latest
+            name: msvc
+            cxx: ""
+            bench: build/Release/fh_bench.exe
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        env:
+          CXX: ${{ matrix.cxx }}
+      - name: Build
+        run: cmake --build build --config Release -j 4
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+      # Every way of scraping must return the same records.
+      - name: Same records
+        run: ${{ matrix.bench }} fixtures --check
