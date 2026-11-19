@@ -9,11 +9,32 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
 
-# Link-time optimization in Release: about 5-10% on the parser (see README).
-include(CheckIPOSupported)
-check_ipo_supported(RESULT fh_ipo_supported OUTPUT fh_ipo_error)
-if(fh_ipo_supported)
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+# Link-time optimization in Release: a few percent on Linux, up to 13-16% with
+# MSVC (see README). FH_LTO=OFF is used when building with PGO.
+option(FH_LTO "Enable link-time optimization in Release" ON)
+if(FH_LTO)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT fh_ipo_supported OUTPUT fh_ipo_error)
+  if(fh_ipo_supported)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+  endif()
+endif()
+
+# Optional profile-guided optimization (GCC/Clang). Build the same directory
+# twice: first with FH_PGO=generate + FH_LTO=OFF, run the benchmark as training,
+# then reconfigure with FH_PGO=use (the profile stays in the build tree):
+#   cmake -S . -B build-pgo -G Ninja -DFH_LTO=OFF -DFH_PGO=generate
+#   cmake --build build-pgo && ./build-pgo/fh_bench fixtures > /dev/null
+#   cmake -S . -B build-pgo -DFH_PGO=use && cmake --build build-pgo
+set(FH_PGO "" CACHE STRING "Profile-guided optimization: 'generate' or 'use'")
+if(FH_PGO STREQUAL "generate")
+  add_compile_options(-fprofile-generate)
+  add_link_options(-fprofile-generate)
+elseif(FH_PGO STREQUAL "use")
+  add_compile_options(-fprofile-use -fprofile-correction)
+  add_link_options(-fprofile-use -fprofile-correction)
+elseif(FH_PGO)
+  message(FATAL_ERROR "FH_PGO must be 'generate', 'use', or empty")
 endif()
 
 function(fh_warnings target)
