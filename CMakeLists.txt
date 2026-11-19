@@ -45,6 +45,18 @@ function(fh_warnings target)
   endif()
 endfunction()
 
+# With PGO, xpath.cpp is built without LTO: profile data plus whole-program
+# optimization makes the XPath evaluator slower (about 75 against 61 us for the
+# books scrape), while LTO keeps paying off in the other modules. Without PGO
+# the file stays under LTO, where it gains a few percent. See "PGO and LTO" in
+# the README.
+add_library(fh_xpath OBJECT src/xpath.cpp)
+target_include_directories(fh_xpath PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
+fh_warnings(fh_xpath)
+if(FH_PGO AND fh_ipo_supported)
+  set_target_properties(fh_xpath PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE OFF)
+endif()
+
 add_library(fh STATIC
   src/tables.cpp
   src/decode.cpp
@@ -53,8 +65,8 @@ add_library(fh STATIC
   src/document.cpp
   src/uri.cpp
   src/css.cpp
-  src/xpath.cpp
   src/generated_entities.cpp
+  $<TARGET_OBJECTS:fh_xpath>
 )
 
 target_include_directories(fh PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

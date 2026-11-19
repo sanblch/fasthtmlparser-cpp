@@ -245,9 +245,12 @@ namespace {
 int main(int argc, char **argv) {
   std::string fixtures = "fixtures";
   bool check_only = false;
+  bool xpath_only = false;
   for (int i = 1; i < argc; i++) {
     if (std::string_view(argv[i]) == "--check") {
       check_only = true;
+    } else if (std::string_view(argv[i]) == "--only=xpath") {
+      xpath_only = true;
     } else {
       fixtures = argv[i];
     }
@@ -296,6 +299,17 @@ int main(int argc, char **argv) {
         "quotes\n",
         find_books.size(),
         find_quotes.size());
+    return 0;
+  }
+
+  // A single scenario, for quick A/B runs of compiler flags.
+  if (xpath_only) {
+    report("books: XPath",
+           measure([&] {
+             const auto result = books_xpath(books);
+             sink += result.size();
+           }),
+           books.size());
     return 0;
   }
 
