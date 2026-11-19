@@ -544,6 +544,23 @@ namespace fh {
                    : std::vector<Tag>{};
   }
 
+  TagView Tag::find_all_view(const TagQuery &query) const {
+    if (!valid()) return {};
+
+    // Descendants are the tags that start before the scope's end; the tag list
+    // is ordered by start, so the first one past the scope is found by binary
+    // search once instead of checking the boundary on every iteration.
+    const Document &doc = document();
+    const auto &data = doc.tag_data();
+    const int first = index() + 1;
+    const auto stop = std::lower_bound(
+        data.begin() + first,
+        data.end(),
+        end(),
+        [](const TagData &tag, int value) { return tag.start < value; });
+    return TagView(doc, query, first, int(stop - data.begin()));
+  }
+
   std::vector<Tag> Tag::css(std::string_view selector) const {
     return CssQuery::cached(selector).select_all(*this);
   }
@@ -731,6 +748,10 @@ namespace fh {
 
   std::vector<Tag> Document::find_all(const TagQuery &query) const {
     return detail::find_all_in(detail::scope_of(*this), query);
+  }
+
+  TagView Document::find_all_view(const TagQuery &query) const {
+    return TagView(*this, query);
   }
 
   std::vector<Tag> Document::css(std::string_view selector) const {

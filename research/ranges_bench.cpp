@@ -35,7 +35,7 @@
 namespace {
   std::size_t allocations = 0;
   bool counting = false;
-}
+}  // namespace
 
 void *operator new(std::size_t size) {
   if (counting) allocations++;
@@ -122,66 +122,8 @@ Generator<fh::Tag> lazy_find_all(const fh::Document &doc,
   }
 }
 
-// --- a lazy view straight over the parsed tag data -------------------------
-
-// Matches the eager find_all exactly, allocates nothing and does not need
-// Document::tags() (the vector of Tag handles built on first use).
-class FindView : public std::ranges::view_interface<FindView> {
- public:
-  class iterator {
-   public:
-    using value_type = fh::Tag;
-    using difference_type = std::ptrdiff_t;
-    using iterator_concept = std::input_iterator_tag;
-
-    iterator() = default;
-    iterator(const fh::Document *document,
-             const fh::TagQuery *query,
-             int index,
-             int stop)
-        : document_(document), query_(query), index_(index), stop_(stop) {
-      skip();
-    }
-
-    fh::Tag operator*() const {
-      return document_->tag(index_);
-    }
-    iterator &operator++() {
-      index_++;
-      skip();
-      return *this;
-    }
-    void operator++(int) {
-      ++*this;
-    }
-    bool operator==(const iterator &) const = default;
-
-   private:
-    void skip() {
-      while (index_ < stop_ && !document_->tag(index_).is(*query_)) index_++;
-    }
-
-    const fh::Document *document_ = nullptr;
-    const fh::TagQuery *query_ = nullptr;
-    int index_ = 0;
-    int stop_ = 0;
-  };
-
-  FindView(const fh::Document &document, const fh::TagQuery &query)
-      : document_(&document), query_(&query), stop_(int(document.tag_count())) {}
-
-  iterator begin() const {
-    return iterator(document_, query_, 0, stop_);
-  }
-  iterator end() const {
-    return iterator(document_, query_, stop_, stop_);
-  }
-
- private:
-  const fh::Document *document_ = nullptr;
-  const fh::TagQuery *query_ = nullptr;
-  int stop_ = 0;
-};
+// The lazy "view" row uses the library's own Document::find_all_view (the
+// prototype that led to it lived here before the API was added).
 
 // --- measurement ------------------------------------------------------------
 
@@ -245,14 +187,18 @@ int main(int argc, char **argv) {
     fh::TagQuery query;
   };
   const Case cases[] = {
-      {"article.product_pod", fh::TagQuery(fh::HtmlTag::Article).with_class(
-                                  "product_pod")},
+      {"article.product_pod",
+       fh::TagQuery(fh::HtmlTag::Article).with_class("product_pod")},
       {"a", fh::TagQuery(fh::HtmlTag::A)},
       {"all tags", fh::TagQuery{}},
   };
 
-  std::printf("%-18s %-9s %10s %10s %8s\n", "query", "variant", "us/call",
-              "MB/s?", "allocs");
+  std::printf("%-18s %-9s %10s %10s %8s\n",
+              "query",
+              "variant",
+              "us/call",
+              "MB/s?",
+              "allocs");
   for (const Case &item : cases) {
     const fh::TagQuery &q = item.query;
 
@@ -275,28 +221,41 @@ int main(int argc, char **argv) {
       sink += count;
     };
     const auto ranged = [&] {
-      sink += consume(doc.tags() | views::filter(
-                                     [&](const fh::Tag &tag) {
-                                       return tag.is(q);
-                                     }));
+      sink += consume(doc.tags() | views::filter([&](const fh::Tag &tag) {
+                        return tag.is(q);
+                      }));
     };
 
-    const std::size_t n = consume(doc.tags() | views::filter(
-                                                [&](const fh::Tag &tag) {
-                                                  return tag.is(q);
-                                                }));
-    std::printf("%-18s %-9s %10.1f %10s %8zu   (%zu results)\n", item.name,
-                "eager", measure(eager) * 1e6, "", allocations_of(eager), n);
-    std::printf("%-18s %-9s %10.1f %10s %8zu\n", item.name, "generator",
-                measure(lazy) * 1e6, "", allocations_of(lazy));
-    std::printf("%-18s %-9s %10.1f %10s %8zu\n", item.name, "ranges",
-                measure(ranged) * 1e6, "", allocations_of(ranged));
+    const std::size_t n =
+        consume(doc.tags()
+                | views::filter([&](const fh::Tag &tag) { return tag.is(q); }));
+    std::printf("%-18s %-9s %10.1f %10s %8zu   (%zu results)\n",
+                item.name,
+                "eager",
+                measure(eager) * 1e6,
+                "",
+                allocations_of(eager),
+                n);
+    std::printf("%-18s %-9s %10.1f %10s %8zu\n",
+                item.name,
+                "generator",
+                measure(lazy) * 1e6,
+                "",
+                allocations_of(lazy));
+    std::printf("%-18s %-9s %10.1f %10s %8zu\n",
+                item.name,
+                "ranges",
+                measure(ranged) * 1e6,
+                "",
+                allocations_of(ranged));
 
-    const auto viewed = [&] {
-      sink += consume(FindView(doc, q));
-    };
-    std::printf("%-18s %-9s %10.1f %10s %8zu\n", item.name, "view",
-                measure(viewed) * 1e6, "", allocations_of(viewed));
+    const auto viewed = [&] { sink += consume(doc.find_all_view(q)); };
+    std::printf("%-18s %-9s %10.1f %10s %8zu\n",
+                item.name,
+                "view",
+                measure(viewed) * 1e6,
+                "",
+                allocations_of(viewed));
 
 #ifdef FH_HAVE_STD_GENERATOR
     const auto std_generator = [&] {
@@ -314,8 +273,11 @@ int main(int argc, char **argv) {
       }
       sink += count;
     };
-    std::printf("%-18s %-9s %10.1f %10s %8zu\n", item.name, "std::gen",
-                measure(std_generator) * 1e6, "",
+    std::printf("%-18s %-9s %10.1f %10s %8zu\n",
+                item.name,
+                "std::gen",
+                measure(std_generator) * 1e6,
+                "",
                 allocations_of(std_generator));
 #endif
   }

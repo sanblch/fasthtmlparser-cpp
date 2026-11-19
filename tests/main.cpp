@@ -1,8 +1,10 @@
 // Tests for the C++ port, mirroring the checks of the C# test suite.
 #include <fh/fasthtmlparser.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -193,6 +195,129 @@ namespace {
              std::string("https://site/dir/page.html#f"));
     CHECK_EQ(links[3].attribute_href(), std::string("https://cdn/x"));
     CHECK_EQ(links[4].attribute_href(), std::string("https://e/f"));
+  }
+
+  // find_all_view must yield exactly what find_all collects, and stay lazy:
+  // no allocation, early exit, composable with the standard views.
+  void test_lazy_view() {
+    fh::Document doc(
+        "<div class=\"card\"><h3><a href=\"/1\">x</a></h3>"
+        "<p class=\"price\">10</p></div>"
+        "<div class=\"card\"><h3><a href=\"/2\">y</a></h3>"
+        "<div class=\"card\"><a href=\"/3\">z</a></div></div>"
+        "<my-widget id=\"w\"><a href=\"/4\">w</a></my-widget>");
+
+    const auto collect = [](auto &&view) {
+      std::vector<fh::Tag> tags;
+      for (const fh::Tag &tag : view) tags.push_back(tag);
+      return tags;
+    };
+
+    const fh::TagQuery cards =
+        fh::TagQuery(fh::HtmlTag::Div).with_class("card");
+    const auto eager = doc.find_all(cards);
+    const auto lazy = collect(doc.find_all_view(cards));
+    CHECK_EQ(lazy.size(), eager.size());
+    for (std::size_t i = 0; i < lazy.size() && i < eager.size(); i++) {
+      CHECK(lazy[i] == eager[i]);
+      CHECK_EQ(lazy[i].index(), eager[i].index());
+    }
+
+    // A query with no criteria matches the whole tag list.
+    const auto everything = collect(doc.find_all_view(fh::TagQuery{}));
+    CHECK_EQ(everything.size(), doc.find_all(fh::TagQuery{}).size());
+    CHECK_EQ(everything.size(), doc.tag_count());
+
+    // A string-named custom tag.
+    const auto widget = collect(doc.find_all_view(fh::TagQuery("my-widget")));
+    CHECK_EQ(widget.size(), std::size_t(1));
+    CHECK_EQ(widget[0].attribute("id"), std::string("w"));
+
+    // Scoped: the view must stop at the scope's end tag, like find_all. The
+    // second card holds a nested card (two links) and the my-widget link that
+    // follows it must not leak into the result.
+    const auto outer = doc.find_all(cards)[1];
+    const auto links = fh::TagQuery(fh::HtmlTag::A);
+    const auto scoped_eager = outer.find_all(links);
+    const auto scoped_lazy = collect(outer.find_all_view(links));
+    CHECK_EQ(scoped_lazy.size(), scoped_eager.size());
+    CHECK_EQ(scoped_lazy.size(), std::size_t(2));
+    for (std::size_t i = 0; i < scoped_lazy.size(); i++)
+      CHECK(scoped_lazy[i] == scoped_eager[i]);
+
+    // An invalid tag scopes nothing.
+    CHECK_EQ(collect(fh::Tag{}.find_all_view(links)).size(), std::size_t(0));
+
+    // No matches at all.
+    CHECK_EQ(
+        collect(doc.find_all_view(fh::TagQuery(fh::HtmlTag::Table))).size(),
+        std::size_t(0));
+
+    // Early exit: the first tag of the view is what find returns.
+    const auto first = *doc.find_all_view(cards).begin();
+    CHECK(first == *doc.find(cards));
+
+    // Composes with the standard views.
+    std::size_t taken = 0;
+    for (const fh::Tag &tag : doc.find_all_view(cards) | std::views::take(2)) {
+      CHECK(tag.is(cards));
+      taken++;
+    }
+    CHECK_EQ(taken, std::size_t(2));
+
+    std::size_t filtered = 0;
+    for (const fh::Tag &tag :
+         doc.find_all_view(links) | std::views::filter([](const fh::Tag &t) {
+           return t.attribute("href") == "/2";
+         })) {
+      CHECK_EQ(tag.attribute("href"), std::string("/2"));
+      filtered++;
+    }
+    CHECK_EQ(filtered, std::size_t(1));
+  }
+
+  // Differential check on real pages: document-wide and scoped views must
+  // yield the same tags, in the same order, as find_all — including the scope
+  // boundary that the view precomputes.
+  void test_lazy_view_scopes(const std::string &fixtures) {
+    const char *pages[] = {"quotes/page1.html",
+                           "webscraper/laptops.html",
+                           "books/index.html",
+                           "webscraper/allinone.html"};
+    const fh::TagQuery queries[] = {
+        fh::TagQuery(fh::HtmlTag::A),
+        fh::TagQuery(fh::HtmlTag::P).with_class("price_color"),
+        fh::TagQuery{}};
+
+    for (const char *page : pages) {
+      fh::Document doc(read_file(fixtures + "/" + page));
+      for (const fh::TagQuery &query : queries) {
+        const auto eager = doc.find_all(query);
+        std::size_t i = 0;
+        for (const fh::Tag &tag : doc.find_all_view(query)) {
+          CHECK(i < eager.size());
+          if (i < eager.size()) CHECK(tag == eager[i]);
+          i++;
+        }
+        CHECK_EQ(i, eager.size());
+      }
+
+      // Every sampled tag as a scope.
+      const int step = std::max(1, int(doc.tag_count()) / 20);
+      for (int index = 0; index < int(doc.tag_count()); index += step) {
+        const fh::Tag scope = doc.tag(index);
+        for (const fh::TagQuery &query : queries) {
+          const auto eager = scope.find_all(query);
+          std::size_t i = 0;
+          for (const fh::Tag &tag : scope.find_all_view(query)) {
+            CHECK(i < eager.size());
+            if (i < eager.size()) CHECK(tag == eager[i]);
+            i++;
+          }
+          CHECK_EQ(i, eager.size());
+        }
+      }
+    }
   }
 
   void test_css() {
@@ -459,6 +584,8 @@ int main(int argc, char **argv) {
 
   test_basic_parse();
   test_parse_borrowed();
+  test_lazy_view();
+  test_lazy_view_scopes(fixtures);
   test_entities();
   test_comments_and_raw_text();
   test_unclosed_tags();

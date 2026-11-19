@@ -21,9 +21,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -36,6 +39,7 @@ namespace fh {
   class Tag;
   class CssQuery;
   class XPathQuery;
+  class TagView;
   struct TagQuery;
   namespace detail {
     struct CssSelectorList;
@@ -138,6 +142,8 @@ namespace fh {
     // Search in the tag's descendants, in document order.
     std::optional<Tag> find(const TagQuery &query) const;
     std::vector<Tag> find_all(const TagQuery &query) const;
+    // The same matches as find_all, yielded lazily and without the vector.
+    TagView find_all_view(const TagQuery &query) const;
 
     std::vector<Tag> css(std::string_view selector) const;
     std::vector<Tag> css(const CssQuery &query) const;
@@ -237,6 +243,10 @@ namespace fh {
     std::optional<Tag> find(const TagQuery &query) const;
     // All tags that match every criterion, in document order.
     std::vector<Tag> find_all(const TagQuery &query) const;
+    // The same matches, yielded lazily and without the vector. The view copies
+    // the query and reads the document on demand, so it works with
+    // std::views::take/filter and stops as soon as iteration stops.
+    TagView find_all_view(const TagQuery &query) const;
 
     std::vector<Tag> css(std::string_view selector) const;
     std::vector<Tag> css(const CssQuery &query) const;
@@ -326,6 +336,93 @@ namespace fh {
     }
 
     bool matches(const Tag &tag) const;
+  };
+
+  // ---------------------------------------------------------------------------
+  // TagView
+  // ---------------------------------------------------------------------------
+
+  // What find_all_view returns: the tags a query matches, in document order,
+  // read lazily from the flat tag list. It allocates nothing and copies the
+  // query, so a temporary query is fine; the document must outlive the view
+  // and its iterators. A view is an input range, so it composes with the
+  // standard views and algorithms:
+  //
+  //   for (const Tag &tag :
+  //        doc.find_all_view(TagQuery(HtmlTag::A)) | std::views::take(5)) ...
+  //
+  // Iterators point into the view, so do not copy or move it while iterating
+  // (a range-for over a returned temporary is fine: its lifetime is extended).
+  class TagView : public std::ranges::view_interface<TagView> {
+   public:
+    class iterator {
+     public:
+      using value_type = Tag;
+      using difference_type = std::ptrdiff_t;
+      using iterator_concept = std::input_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
+
+      iterator() = default;
+      iterator(const Document *document,
+               const TagQuery *query,
+               int index,
+               int stop)
+          : document_(document), query_(query), index_(index), stop_(stop) {
+        skip();
+      }
+
+      Tag operator*() const {
+        return document_->tag(index_);
+      }
+      iterator &operator++() {
+        index_++;
+        skip();
+        return *this;
+      }
+      void operator++(int) {
+        ++*this;
+      }
+      bool operator==(const iterator &) const = default;
+
+     private:
+      void skip() {
+        if (!document_) return;
+        while (index_ < stop_ && !document_->tag(index_).is(*query_)) index_++;
+      }
+
+      const Document *document_ = nullptr;
+      const TagQuery *query_ = nullptr;
+      int index_ = 0;
+      int stop_ = 0;
+    };
+
+    TagView() = default;
+    TagView(const Document &document, const TagQuery &query)
+        : document_(&document),
+          query_(query),
+          stop_(int(document.tag_count())) {}
+    // [first, stop) are indices in the document's tag list; stop is where the
+    // scope's last descendant ends.
+    TagView(const Document &document,
+            const TagQuery &query,
+            int first,
+            int stop)
+        : document_(&document), query_(query), first_(first), stop_(stop) {}
+
+    iterator begin() const {
+      if (!document_) return {};
+      return iterator(document_, &query_, first_, stop_);
+    }
+    iterator end() const {
+      if (!document_) return {};
+      return iterator(document_, &query_, stop_, stop_);
+    }
+
+   private:
+    const Document *document_ = nullptr;
+    TagQuery query_;
+    int first_ = 0;
+    int stop_ = 0;
   };
 
   // ---------------------------------------------------------------------------
