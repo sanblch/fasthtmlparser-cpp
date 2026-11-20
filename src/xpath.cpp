@@ -394,6 +394,32 @@ namespace fh::detail {
       return false;
     }
 
+    // Whether `token` occurs in `text` with a space (or an end) on both sides.
+    // This is `contains(concat(' ', text, ' '), ' token ')` without building
+    // the concatenated string.
+    bool token_between_spaces(std::string_view text, std::string_view token) {
+      for (std::size_t position = text.find(token);
+           position != std::string_view::npos;
+           position = text.find(token, position + 1)) {
+        const bool left = position == 0 || text[position - 1] == ' ';
+        const std::size_t after = position + token.size();
+        const bool right = after == text.size() || text[after] == ' ';
+        if (left && right) return true;
+      }
+      return false;
+    }
+
+    bool attribute_has_token(const XNode &node,
+                             std::string_view name,
+                             std::string_view token) {
+      if (node.kind != XNodeKind::Element) return false;
+      const std::string_view raw = span_attribute_by_name(node.tag, name);
+      if (raw.empty()) return false;
+      if (needs_decoding(raw))
+        return token_between_spaces(decode_attribute(raw), token);
+      return token_between_spaces(raw, token);
+    }
+
     std::string string_value(const XNode &node) {
       switch (node.kind) {
         case XNodeKind::Root:
@@ -898,6 +924,26 @@ namespace fh::detail {
       bool eval_bool(const Ctx &ctx) const override {
         std::string_view raw;
         return try_get_attribute(ctx.node, name, raw);
+      }
+    };
+
+    // contains(concat(' ', @name, ' '), ' token '): the class(es) of the
+    // element include token, checked in place without building any string.
+    struct AttributeTokenExpr : XPathExpr {
+      std::string name;
+      std::string token;
+
+      AttributeTokenExpr(std::string name_, std::string token_)
+          : name(std::move(name_)), token(std::move(token_)) {}
+
+      XType type() const override {
+        return XType::Boolean;
+      }
+      Value eval(const Ctx &ctx) const override {
+        return eval_bool(ctx);
+      }
+      bool eval_bool(const Ctx &ctx) const override {
+        return attribute_has_token(ctx.node, name, token);
       }
     };
 
@@ -1877,6 +1923,37 @@ namespace fh::detail {
         return true;
       }
 
+      // contains(concat(' ', @name, ' '), ' token ') becomes the in-place
+      // attribute token test; anything else stays a general function call.
+      static std::shared_ptr<XPathExpr> make_contains_token(
+          const std::vector<std::shared_ptr<XPathExpr>> &args) {
+        if (args.size() != 2) return nullptr;
+
+        auto *concat = dynamic_cast<FunctionExpr *>(args[0].get());
+        if (concat == nullptr || concat->fn != Fn::Concat
+            || concat->args.size() != 3)
+          return nullptr;
+        const auto is_space = [](const std::shared_ptr<XPathExpr> &expr) {
+          auto *literal = dynamic_cast<LiteralExpr *>(expr.get());
+          return literal != nullptr && literal->value == " ";
+        };
+        if (!is_space(concat->args[0]) || !is_space(concat->args[2]))
+          return nullptr;
+
+        std::string name;
+        if (!try_get_attribute_name(concat->args[1], name)) return nullptr;
+
+        auto *needle = dynamic_cast<LiteralExpr *>(args[1].get());
+        if (needle == nullptr || needle->value.size() < 3
+            || needle->value.front() != ' ' || needle->value.back() != ' ')
+          return nullptr;
+        std::string token = needle->value.substr(1, needle->value.size() - 2);
+        if (token.empty()) return nullptr;
+
+        return std::make_shared<AttributeTokenExpr>(std::move(name),
+                                                    std::move(token));
+      }
+
       std::shared_ptr<XPathExpr> parse_relational() {
         auto left = parse_additive();
         while (true) {
@@ -2169,6 +2246,10 @@ namespace fh::detail {
                 && !args.empty() && args[0]->type() != XType::NodeSet)
               throw error(name + "() needs a node-set argument",
                           std::size_t(token.position));
+
+            if (function.fn == Fn::Contains) {
+              if (auto fast = make_contains_token(args)) return fast;
+            }
 
             return std::make_shared<FunctionExpr>(
                 function.fn, std::move(args), function.type);

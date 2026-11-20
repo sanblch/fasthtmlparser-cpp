@@ -350,6 +350,40 @@ namespace {
     CHECK(doc.css_first("a[title^='t' i]").has_value());
   }
 
+  // contains(concat(' ', @class, ' '), ' token ') has a compiled fast path; it
+  // must match the general function semantics exactly (spaces, not whitespace;
+  // entities decoded; a substring without spaces does not match).
+  void test_xpath_token_predicate() {
+    fh::Document doc(
+        "<div class='a b'>1</div>"
+        "<div class=' a  b '>2</div>"
+        "<div class='ab'>3</div>"
+        "<div class='a\tb'>4</div>"
+        "<div class='x a&amp;b'>5</div>"
+        "<div>6</div>");
+
+    const auto count = [&](std::string_view token) {
+      const std::string expression =
+          "//div[contains(concat(' ', @class, ' '), ' " + std::string(token)
+          + " ')]";
+      return doc.xpath(expression).size();
+    };
+
+    // ' a ' / ' b ' match the space-separated classes only, not "a&b" (the
+    // character after 'a' there is '&') and not "a\tb" (a tab, not a space).
+    CHECK_EQ(count("a"), std::size_t(2));
+    CHECK_EQ(count("b"), std::size_t(2));
+    CHECK_EQ(count("ab"), std::size_t(1));
+    CHECK_EQ(count("a&b"), std::size_t(1));
+    CHECK_EQ(count("x a&b"), std::size_t(1));
+    CHECK_EQ(count("missing"), std::size_t(0));
+
+    // A plain contains() and a concat() with other literals keep working.
+    CHECK_EQ(doc.xpath("//div[contains(@class, 'a')]").size(), std::size_t(5));
+    CHECK_EQ(doc.xpath("//div[contains(concat('x', @class), 'xa')]").size(),
+             std::size_t(3));
+  }
+
   void test_xpath() {
     fh::Document doc(
         "<ul id=\"menu\"><li>a</li><li>b</li><li>c</li></ul>"
@@ -594,6 +628,7 @@ int main(int argc, char **argv) {
   test_links();
   test_css();
   test_xpath();
+  test_xpath_token_predicate();
   test_scrape(fixtures);
   test_query_parity(data);
 
