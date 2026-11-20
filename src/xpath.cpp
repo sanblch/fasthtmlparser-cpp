@@ -995,19 +995,23 @@ namespace fh::detail {
         return false;
       }
 
-      std::vector<XNode> apply(const std::vector<XNode> &input,
-                               EvalState &state) const {
-        std::vector<XNode> result;
+      // Appends into `result`; `scratch` is reused for the nodes of every
+      // input node. Both vectors belong to the caller and keep their capacity
+      // across the steps of a path.
+      void apply(const std::vector<XNode> &input,
+                 std::vector<XNode> &result,
+                 std::vector<XNode> &scratch,
+                 EvalState &state) const {
+        result.clear();
 
         for (const XNode &node : input) {
-          std::vector<XNode> buffer;
-          collect(node, buffer, state);
-          select(0, buffer, state);
-          result.insert(result.end(), buffer.begin(), buffer.end());
+          scratch.clear();
+          collect(node, scratch, state);
+          select(0, scratch, state);
+          result.insert(result.end(), scratch.begin(), scratch.end());
         }
 
         sort_unique(result);
-        return result;
       }
 
       // The nodes of the axis that pass the test, in axis order (reverse axes:
@@ -1227,9 +1231,12 @@ namespace fh::detail {
           current.push_back(ctx.node);
         }
 
+        std::vector<XNode> next;
+        std::vector<XNode> scratch;
         for (const Step &step : steps) {
           if (current.empty()) break;
-          current = step.apply(current, *ctx.state);
+          step.apply(current, next, scratch, *ctx.state);
+          current.swap(next);
         }
 
         NodeSet result;
